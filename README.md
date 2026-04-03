@@ -1,4 +1,4 @@
-# rentbus
+# RentBus
 Esse é um teste do RentBus.
 :oncoming_bus: RentBus — Marketplace de Fretamento de Ônibus e Vans
 
