@@ -146,7 +146,7 @@
 import { computed, ref } from "vue";
 import api from "../services/api";
 
-const role = ref("company");
+const role = ref("client");
 const name = ref("");
 const email = ref("");
 const password = ref("");
