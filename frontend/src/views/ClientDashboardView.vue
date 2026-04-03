@@ -523,10 +523,7 @@ const mapMarkers = computed(() => {
     }
   })
 
-  if (
-    typeof tripForm.value.destinationLat === 'number' &&
-    typeof tripForm.value.destinationLng === 'number'
-  ) {
+  if (typeof tripForm.value.destinationLat === 'number' && typeof tripForm.value.destinationLng === 'number') {
     markers.push({
       lat: tripForm.value.destinationLat,
       lng: tripForm.value.destinationLng,
@@ -588,20 +585,39 @@ function resetTripForm() {
   }
 }
 
+function buildAddressLabel(parts: Array<string | undefined>) {
+  return parts
+    .map((part) => String(part || '').trim())
+    .filter(Boolean)
+    .join(', ')
+}
+
 async function geocodeAddress(address: string) {
-  if (!address) return null
+  if (!address.trim()) return null
 
   const response = await fetch(
-    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
+    `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`
   )
   const results = await response.json()
 
-  if (!results.length) return null
+  if (!Array.isArray(results) || !results.length) return null
 
   return {
     lat: Number(results[0].lat),
     lng: Number(results[0].lon)
   }
+}
+
+async function geocodeAddressWithFallback(fullAddress: string, fallbackAddress?: string) {
+  const firstTry = await geocodeAddress(fullAddress)
+  if (firstTry) return firstTry
+
+  if (fallbackAddress && fallbackAddress !== fullAddress) {
+    const secondTry = await geocodeAddress(fallbackAddress)
+    if (secondTry) return secondTry
+  }
+
+  return null
 }
 
 async function fillAddressByCep(type: 'origin' | 'destination') {
@@ -618,7 +634,7 @@ async function fillAddressByCep(type: 'origin' | 'destination') {
       tripForm.value.originStreet = data.logradouro || ''
     }
 
-    const label = [
+    const fullLabel = buildAddressLabel([
       tripForm.value.originStreet || data.logradouro,
       tripForm.value.originNumber,
       tripForm.value.originComplement,
@@ -626,12 +642,18 @@ async function fillAddressByCep(type: 'origin' | 'destination') {
       data.localidade,
       data.uf,
       cep
-    ]
-      .filter(Boolean)
-      .join(', ')
+    ])
 
-    tripForm.value.originLabel = label
-    const coords = await geocodeAddress(label)
+    const fallbackLabel = buildAddressLabel([
+      tripForm.value.originStreet || data.logradouro,
+      data.bairro,
+      data.localidade,
+      data.uf,
+      cep
+    ])
+
+    tripForm.value.originLabel = fullLabel
+    const coords = await geocodeAddressWithFallback(fullLabel, fallbackLabel)
     tripForm.value.originLat = coords?.lat ?? null
     tripForm.value.originLng = coords?.lng ?? null
   } else {
@@ -639,7 +661,7 @@ async function fillAddressByCep(type: 'origin' | 'destination') {
       tripForm.value.destinationStreet = data.logradouro || ''
     }
 
-    const label = [
+    const fullLabel = buildAddressLabel([
       tripForm.value.destinationStreet || data.logradouro,
       tripForm.value.destinationNumber,
       tripForm.value.destinationComplement,
@@ -647,12 +669,18 @@ async function fillAddressByCep(type: 'origin' | 'destination') {
       data.localidade,
       data.uf,
       cep
-    ]
-      .filter(Boolean)
-      .join(', ')
+    ])
 
-    tripForm.value.destinationLabel = label
-    const coords = await geocodeAddress(label)
+    const fallbackLabel = buildAddressLabel([
+      tripForm.value.destinationStreet || data.logradouro,
+      data.bairro,
+      data.localidade,
+      data.uf,
+      cep
+    ])
+
+    tripForm.value.destinationLabel = fullLabel
+    const coords = await geocodeAddressWithFallback(fullLabel, fallbackLabel)
     tripForm.value.destinationLat = coords?.lat ?? null
     tripForm.value.destinationLng = coords?.lng ?? null
   }
@@ -669,11 +697,26 @@ async function fillStopByCep(index: number) {
   const data = await response.json()
   if (data.erro) return
 
-  stop.label = [data.logradouro, stop.number, data.bairro, data.localidade, data.uf, cep]
-    .filter(Boolean)
-    .join(', ')
+  const fullLabel = buildAddressLabel([
+    data.logradouro,
+    stop.number,
+    data.bairro,
+    data.localidade,
+    data.uf,
+    cep
+  ])
 
-  const coords = await geocodeAddress(stop.label)
+  const fallbackLabel = buildAddressLabel([
+    data.logradouro,
+    data.bairro,
+    data.localidade,
+    data.uf,
+    cep
+  ])
+
+  stop.label = fullLabel
+
+  const coords = await geocodeAddressWithFallback(fullLabel, fallbackLabel)
   stop.lat = coords?.lat ?? null
   stop.lng = coords?.lng ?? null
 }
