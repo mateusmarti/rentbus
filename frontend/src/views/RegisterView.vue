@@ -10,8 +10,8 @@
               <div class="mb-3">
                 <label class="form-label">Tipo de cadastro</label>
                 <select v-model="role" class="form-select">
-                  <option value="company">Empresa</option>
                   <option value="client">Contratante</option>
+                  <option value="company">Empresa</option>
                 </select>
               </div>
 
