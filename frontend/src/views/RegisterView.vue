@@ -157,7 +157,9 @@ const personType = ref("pf");
 const cpf = ref("");
 const phone = ref("");
 const message = ref("");
+const address = ref("");
 const errorMessage = ref("");
+
 
 function onlyDigits(value: string) {
   return value.replace(/\D/g, "");
@@ -273,6 +275,7 @@ async function handleRegister() {
       personType: personType.value,
       cpf: onlyDigits(cpf.value),
       phone: onlyDigits(phone.value),
+      address: address.value.trim(),
     });
 
     message.value = "Cadastro realizado com sucesso";
@@ -288,6 +291,7 @@ async function handleRegister() {
     phone.value = "";
     personType.value = "pf";
     role.value = "company";
+    address.value = "";
   } catch (error: any) {
     errorMessage.value = error.response?.data?.message || "Erro ao cadastrar";
   }

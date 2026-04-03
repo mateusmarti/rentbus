@@ -196,7 +196,7 @@
               <div class="row g-2">
                 <div class="col-12 col-md-3">
                   <label class="form-label">CEP da parada</label>
-                  <input v-model="stop.cep" class="form-control" @blur="fillStopByCep(index)" />
+                  <input v-model="stop.cep" class="form-control" @blur="fillStopByCep(Number(index))" />
                 </div>
 
                 <div class="col-12 col-md-2">
@@ -210,7 +210,7 @@
                 </div>
 
                 <div class="col-12 col-md-2 d-flex align-items-end">
-                  <button type="button" class="btn btn-outline-danger w-100" @click="removeStop(index)">
+                  <button type="button" class="btn btn-outline-danger w-100" @click="removeStop(Number(index))">
                     Remover
                   </button>
                 </div>
@@ -308,7 +308,6 @@
         <ActionTable :headers="['Título', 'Origem', 'Destino', 'Status', 'Pagamento']">
           <tr v-for="trip in trips" :key="trip._id">
             <td>{{ trip.title }}</td>
-            <!-- <td>{{ getBusTypeLabel(trip.busType) }}</td> -->
             <td>{{ trip.originLabel }}</td>
             <td>{{ trip.destinationLabel }}</td>
             <td>{{ getTripStatusLabel(trip.status) }}</td>
@@ -395,6 +394,37 @@ import InfoGrid from '../components/InfoGrid.vue'
 import TripMapPreview from '../components/TripMapPreview.vue'
 import { getBusTypeLabel, getPaymentStatusLabel, getTripStatusLabel } from '../utils/labels'
 
+type TripStop = {
+  cep: string
+  number: string
+  label: string
+  lat: number | null
+  lng: number | null
+}
+
+type TripForm = {
+  title: string
+  busType: string
+  originCep: string
+  originNumber: string
+  originStreet: string
+  originComplement: string
+  originLabel: string
+  originLat: number | null
+  originLng: number | null
+  destinationCep: string
+  destinationNumber: string
+  destinationStreet: string
+  destinationComplement: string
+  destinationLabel: string
+  destinationLat: number | null
+  destinationLng: number | null
+  stops: TripStop[]
+  maxPassengers: number
+  tripDate: string
+  notes: string
+}
+
 const router = useRouter()
 const activeSection = ref('request')
 const trips = ref<any[]>([])
@@ -415,12 +445,12 @@ function openReceiptWindow(trip: any) {
 }
 
 const menuItems = [
-  { key: "profile", label: "Perfil", icon: 'house' },
-  { key: "request", label: "Solicitar", icon: "file-circle-plus" },
-  { key: "quotes", label: "Orçamentos", icon: "clipboard-list" },
-  { key: "trips", label: "Viagens", icon: "bus" },
-  { key: "payments", label: "Pagamentos", icon: "credit-card" },
-];
+  { key: 'profile', label: 'Perfil', icon: 'house' },
+  { key: 'request', label: 'Solicitar', icon: 'file-circle-plus' },
+  { key: 'quotes', label: 'Orçamentos', icon: 'clipboard-list' },
+  { key: 'trips', label: 'Viagens', icon: 'bus' },
+  { key: 'payments', label: 'Pagamentos', icon: 'credit-card' },
+]
 
 const profileForm = ref<any>({
   id: '',
@@ -438,7 +468,7 @@ const passwordForm = ref({
   confirmPassword: ''
 })
 
-const tripForm = ref<any>({
+const tripForm = ref<TripForm>({
   title: 'Solicitação de Fretamento',
   busType: 'urbano',
   originCep: '',
@@ -446,22 +476,16 @@ const tripForm = ref<any>({
   originStreet: '',
   originComplement: '',
   originLabel: '',
-  originLat: null as number | null,
-  originLng: null as number | null,
+  originLat: null,
+  originLng: null,
   destinationCep: '',
   destinationNumber: '',
   destinationStreet: '',
   destinationComplement: '',
   destinationLabel: '',
-  destinationLat: null as number | null,
-  destinationLng: null as number | null,
-  stops: [] as Array<{
-    cep: string
-    number: string
-    label: string
-    lat: number | null
-    lng: number | null
-  }>,
+  destinationLat: null,
+  destinationLng: null,
+  stops: [],
   maxPassengers: 1,
   tripDate: '',
   notes: ''
@@ -489,7 +513,7 @@ const mapMarkers = computed(() => {
     })
   }
 
-  tripForm.value.stops.forEach((stop, index) => {
+  tripForm.value.stops.forEach((stop: TripStop, index: number) => {
     if (typeof stop.lat === 'number' && typeof stop.lng === 'number') {
       markers.push({
         lat: stop.lat,
@@ -636,6 +660,8 @@ async function fillAddressByCep(type: 'origin' | 'destination') {
 
 async function fillStopByCep(index: number) {
   const stop = tripForm.value.stops[index]
+  if (!stop) return
+
   const cep = String(stop.cep).replace(/\D/g, '')
   if (cep.length !== 8) return
 
