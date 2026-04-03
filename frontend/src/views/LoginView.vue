@@ -48,24 +48,6 @@ const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
 
-// async function handleLogin() {
-//   try {
-//     errorMessage.value = ''
-
-//     const response = await api.post('/auth/login', {
-//       email: email.value,
-//       password: password.value
-//     })
-
-//     localStorage.setItem('token', response.data.token)
-//     localStorage.setItem('user', JSON.stringify(response.data.user))
-
-//     router.push('/dashboard')
-//   } catch (error: any) {
-//     errorMessage.value = error.response?.data?.message || 'Erro ao fazer login'
-//   }
-// }
-
 async function handleLogin() {
   try {
     errorMessage.value = ''
@@ -75,22 +57,12 @@ async function handleLogin() {
       password: password.value
     })
 
-    console.log('LOGIN OK:', response.data)
-
     localStorage.setItem('token', response.data.token)
     localStorage.setItem('user', JSON.stringify(response.data.user))
 
     router.push('/dashboard')
   } catch (error: any) {
-    console.log('ERRO LOGIN COMPLETO:', error)
-    console.log('ERRO LOGIN RESPONSE:', error?.response)
-    console.log('ERRO LOGIN DATA:', error?.response?.data)
-    console.log('ERRO LOGIN MESSAGE:', error?.message)
-
-    errorMessage.value =
-      error?.response?.data?.message ||
-      error?.message ||
-      'Erro ao fazer login'
+    errorMessage.value = error.response?.data?.message || 'Erro ao fazer login'
   }
 }
 </script>
