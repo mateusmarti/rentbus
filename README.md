@@ -1,6 +1,5 @@
 # RentBus
-Esse é um teste do RentBus.
-:oncoming_bus: RentBus — Marketplace de Fretamento de Ônibus e Vans
+RentBus — Marketplace de Fretamento de Ônibus e Vans
 
 Sistema web para contratação e oferta de fretamento de transporte (ônibus e vans), conectando contratantes e empresas de transporte em uma plataforma de orçamento e gestão de viagens.
 
